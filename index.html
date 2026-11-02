@@ -100,7 +100,7 @@
                 Seleccioná una imagen de la vidriera para visualizarla, aplicarle el sello oficial con la hora exacta y descargarla:
             </p>
 
-            <!-- Galería de imágenes cargadas desde la carpeta img/ -->
+            <!-- Galería -->
             <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2 border border-gray-800 rounded-lg bg-black/40">
                 <!-- Se cargan dinámicamente -->
             </div>
@@ -129,14 +129,11 @@
     <!-- LÓGICA -->
     <script>
         // =========================================================================
-        // CONFIGURÁ ACÁ LOS NOMBRES DE TUS ARCHIVOS PNG SUBIDOS A LA CARPETA 'img/'
+        // ⚠️ PONÉ ACÁ EXACTAMENTE LOS NOMBRES DE TUS ARCHIVOS PNG QUE SUBISTE A 'img/'
         // =========================================================================
         const repositoryImages = [
             "imagen1.png",
-            "imagen2.png",
-            "kong-logo.png"
-            // Agregá acá abajo más nombres de tus archivos si subís más:
-            // "otrafoto.png"
+            "imagen2.png"
         ];
 
         let lightState = false;
@@ -179,7 +176,7 @@
             }
         }
 
-        // Cargar galería automáticamente desde la carpeta img/
+        // Cargar galería
         const galleryGrid = document.getElementById('galleryGrid');
         const canvas = document.getElementById('canvasPreview');
         const ctx = canvas.getContext('2d');
@@ -193,26 +190,29 @@
             }
 
             repositoryImages.forEach((imgName) => {
-                const imgPath = `img/${imgName}`;
+                // Usamos ruta absoluta basada en el repositorio para evitar problemas en GitHub Pages
+                const basePath = window.location.pathname.includes('/') && window.location.pathname.length > 1 
+                    ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) 
+                    : '';
+                const imgPath = `./img/${imgName}`;
                 
                 const thumbDiv = document.createElement('div');
-                thumbDiv.className = "relative aspect-square bg-black/80 rounded border border-gray-700 overflow-hidden cursor-pointer hover:border-amber-500 transition group flex items-center justify-center";
+                thumbDiv.className = "relative aspect-square bg-black/80 rounded border border-gray-700 overflow-hidden cursor-pointer hover:border-amber-500 transition group flex flex-col items-center justify-center p-1";
                 
                 const imgTag = document.createElement('img');
                 imgTag.src = imgPath;
                 imgTag.alt = imgName;
-                imgTag.className = "w-full h-full object-cover group-hover:scale-105 transition duration-300";
+                imgTag.className = "w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded";
                 
-                // Si la imagen no existe en el repo, mostrar aviso sutil
+                // Control si falla la carga de la imagen
                 imgTag.onerror = function() {
-                    thumbDiv.innerHTML = `<span class="text-[10px] text-red-400 text-center p-1">Falta: ${imgName}</span>`;
+                    thumbDiv.innerHTML = `<span class="text-[9px] text-red-400 text-center font-mono">Error:<br>${imgName}</span>`;
                 };
 
                 thumbDiv.appendChild(imgTag);
 
-                // Al hacer clic, cargar al visor principal
+                // Al hacer clic, cargar al visor
                 thumbDiv.addEventListener('click', function() {
-                    // Remover selección previa
                     document.querySelectorAll('#galleryGrid > div').forEach(d => d.classList.remove('ring-2', 'ring-amber-400'));
                     thumbDiv.classList.add('ring-2', 'ring-amber-400');
 
@@ -224,6 +224,9 @@
                         renderCanvasWithWatermark();
                         downloadBtn.disabled = false;
                     };
+                    fullImg.onerror = function() {
+                        alert("No se pudo cargar la imagen: " + imgPath + "\nVerificá que el archivo exista en la carpeta 'img' y el nombre sea exacto.");
+                    }
                     fullImg.src = imgPath;
                 });
 
@@ -237,10 +240,8 @@
             canvas.width = selectedImgObj.width;
             canvas.height = selectedImgObj.height;
 
-            // Dibujar imagen del repositorio
             ctx.drawImage(selectedImgObj, 0, 0);
 
-            // Sello Ducado Kong + Hora exacta actual
             const padding = Math.max(20, canvas.width * 0.03);
             const fontSize = Math.max(16, Math.floor(canvas.width * 0.025));
             
@@ -260,7 +261,6 @@
             const boxX = canvas.width - boxWidth - padding;
             const boxY = canvas.height - boxHeight - padding;
 
-            // Placa oscura semitransparente con borde ámbar
             ctx.fillStyle = "rgba(10, 10, 10, 0.85)";
             ctx.strokeStyle = "#f59e0b";
             ctx.lineWidth = Math.max(2, canvas.width * 0.003);
@@ -270,7 +270,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Textos del sello
             ctx.fillStyle = "#f59e0b";
             ctx.fillText(text1, boxX + padding, boxY + padding + fontSize);
 
@@ -279,10 +278,9 @@
             ctx.fillText(text2, boxX + padding, boxY + padding + fontSize * 2.2);
         }
 
-        // Descargar
         function downloadImage() {
             if (!selectedImgObj) return;
-            renderCanvasWithWatermark(); // Actualiza a la hora exacta del clic
+            renderCanvasWithWatermark();
             
             const link = document.createElement('a');
             link.download = 'ducado-kong-sellada.png';
@@ -290,7 +288,6 @@
             link.click();
         }
 
-        // Inicializar galería al cargar
         initGallery();
     </script>
 </body>
