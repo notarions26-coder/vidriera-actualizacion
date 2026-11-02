@@ -59,7 +59,6 @@
                 <h2 class="text-sm font-semibold tracking-wider text-gray-300">WATER RESIST</h2>
             </div>
 
-            <!-- Pantalla LCD -->
             <div id="lcd" class="lcd-screen w-full rounded-lg p-3 flex flex-col items-center justify-center border-2 border-gray-700 relative overflow-hidden">
                 <div class="text-[10px] font-mono tracking-tighter text-center uppercase font-bold opacity-90 mb-1">
                     CLUB MISTER KONG TE DA LA HORA
@@ -86,28 +85,26 @@
             </div>
         </div>
 
-        <!-- VIDRIERA Y SELLADOR DIGITAL -->
+        <!-- VIDRIERA -->
         <div class="w-full flex-1 bg-gray-900/80 border border-gray-800 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
             <h3 class="font-futuristic text-lg text-amber-400 border-b border-gray-800 pb-2 flex justify-between items-center">
-                <span>Vidriera & Sello Oficial</span>
-                <span class="text-xs font-mono text-gray-400">Mr.Kong Club Mdp</span>
+                <span>Vidriera del Repositorio</span>
+                <span id="statusText" class="text-xs font-mono text-gray-400">Cargando imágenes...</span>
             </h3>
 
-            <!-- Selector de Imagen -->
-            <div class="flex flex-col gap-2">
-                <label class="text-xs text-gray-300 font-medium">Cargar imagen PNG para la vidriera:</label>
-                <input type="file" id="fileInput" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-gray-950 hover:file:bg-amber-400 cursor-pointer bg-gray-950/60 rounded-lg border border-gray-800 p-1"/>
+            <!-- Galería que lee automáticamente del Repo -->
+            <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2 border border-gray-800 rounded-lg bg-black/40">
             </div>
 
-            <!-- Canvas de previsualización -->
-            <div class="relative w-full aspect-video bg-black/60 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center min-h-[220px]">
+            <!-- Visor del Canvas -->
+            <div class="relative w-full aspect-video bg-black/60 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center min-h-[200px]">
                 <canvas id="canvasPreview" class="max-h-full max-w-full object-contain hidden"></canvas>
                 <div id="placeholderText" class="text-xs text-gray-500 text-center px-4">
-                    Seleccioná tu imagen PNG para visualizarla con la hora exacta y el sello de Ducado Kong.
+                    Seleccioná una imagen de la vidriera para verla con el sello de Ducado Kong y la hora exacta.
                 </div>
             </div>
 
-            <!-- Botón de Descarga -->
+            <!-- Botón Descargar -->
             <button id="downloadBtn" onclick="downloadImage()" disabled class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-gray-950 font-bold py-3 px-4 rounded-xl transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
                 Descargar Imagen Con Sello y Hora Exacta
             </button>
@@ -121,7 +118,7 @@
 
     <script>
         let lightState = false;
-        let loadedImg = null;
+        let selectedImgObj = null;
 
         // Reloj Casio
         function updateClock() {
@@ -160,40 +157,113 @@
             }
         }
 
-        // Manejo del Canvas
-        const fileInput = document.getElementById('fileInput');
+        // AUTO-DETECCIÓN DE IMÁGENES VIA API DE GITHUB
+        const galleryGrid = document.getElementById('galleryGrid');
+        const statusText = document.getElementById('statusText');
         const canvas = document.getElementById('canvasPreview');
         const ctx = canvas.getContext('2d');
         const placeholderText = document.getElementById('placeholderText');
         const downloadBtn = document.getElementById('downloadBtn');
 
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    loadedImg = new Image();
-                    loadedImg.onload = function() {
+        // Detectar usuario y repo automáticamente desde la URL
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const repoOwner = window.location.hostname.split('.')[0] || "notarios26-codificador";
+        const repoName = pathSegments[0] || "vidriera-actualizacion";
+
+        async function loadRepositoryImages() {
+            try {
+                const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) throw new Error("No se pudo conectar a GitHub");
+                
+                const files = await response.json();
+                
+                // Filtrar solo las imágenes PNG/JPG
+                const imageFiles = files.filter(file => file.name.match(/\.(png|jpe?g)$/i));
+
+                if (imageFiles.length === 0) {
+                    statusText.innerText = "Sin imágenes encontradas";
+                    galleryGrid.innerHTML = '<p class="text-xs text-gray-500 col-span-full text-center py-4">No hay imágenes PNG en el repositorio.</p>';
+                    return;
+                }
+
+                statusText.innerText = `${imageFiles.length} imágenes listadas`;
+                galleryGrid.innerHTML = '';
+
+                imageFiles.forEach(file => {
+                    const thumbDiv = document.createElement('div');
+                    thumbDiv.className = "relative aspect-square bg-black/80 rounded border border-gray-700 overflow-hidden cursor-pointer hover:border-amber-500 transition group flex items-center justify-center p-1";
+                    
+                    const imgTag = document.createElement('img');
+                    imgTag.src = file.download_url;
+                    imgTag.alt = file.name;
+                    imgTag.crossOrigin = "anonymous";
+                    imgTag.className = "w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded";
+
+                    thumbDiv.appendChild(imgTag);
+
+                    thumbDiv.addEventListener('click', function() {
+                        document.querySelectorAll('#galleryGrid > div').forEach(d => d.classList.remove('ring-2', 'ring-amber-400'));
+                        thumbDiv.classList.add('ring-2', 'ring-amber-400');
+
+                        const fullImg = new Image();
+                        fullImg.crossOrigin = "anonymous";
+                        fullImg.onload = function() {
+                            selectedImgObj = fullImg;
+                            placeholderText.classList.add('hidden');
+                            canvas.classList.remove('hidden');
+                            renderCanvas();
+                            downloadBtn.disabled = false;
+                        };
+                        fullImg.src = file.download_url;
+                    });
+
+                    galleryGrid.appendChild(thumbDiv);
+                });
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "Cargando fallback...";
+                // Si la API falla por límite, intenta rutas directas predeterminadas
+                loadDirectFallback(["t1.png", "t2.png"]);
+            }
+        }
+
+        function loadDirectFallback(fileList) {
+            galleryGrid.innerHTML = '';
+            fileList.forEach(fileName => {
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = "relative aspect-square bg-black/80 rounded border border-gray-700 overflow-hidden cursor-pointer hover:border-amber-500 transition group flex items-center justify-center p-1";
+                
+                const imgTag = document.createElement('img');
+                imgTag.src = fileName;
+                imgTag.className = "w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded";
+                
+                thumbDiv.appendChild(imgTag);
+                thumbDiv.addEventListener('click', function() {
+                    const fullImg = new Image();
+                    fullImg.onload = function() {
+                        selectedImgObj = fullImg;
                         placeholderText.classList.add('hidden');
                         canvas.classList.remove('hidden');
                         renderCanvas();
                         downloadBtn.disabled = false;
-                    }
-                    loadedImg.src = event.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
+                    };
+                    fullImg.src = fileName;
+                });
+                galleryGrid.appendChild(thumbDiv);
+            });
+        }
 
         function renderCanvas() {
-            if (!loadedImg) return;
+            if (!selectedImgObj) return;
 
-            canvas.width = loadedImg.width;
-            canvas.height = loadedImg.height;
+            canvas.width = selectedImgObj.width;
+            canvas.height = selectedImgObj.height;
 
-            ctx.drawImage(loadedImg, 0, 0);
+            ctx.drawImage(selectedImgObj, 0, 0);
 
-            // Sello Ducado Kong - Mr.Kong Club Mdp + Hora Exacta
             const padding = Math.max(20, canvas.width * 0.03);
             const fontSize = Math.max(16, Math.floor(canvas.width * 0.025));
             
@@ -231,13 +301,15 @@
         }
 
         function downloadImage() {
-            if (!loadedImg) return;
+            if (!selectedImgObj) return;
             renderCanvas();
             const link = document.createElement('a');
             link.download = 'ducado-kong-sellada.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
+
+        loadRepositoryImages();
     </script>
 </body>
 </html>
