@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ducado Kong - Reloj Casio & Vidriera</title>
+    <!-- Google Fonts para tipografía retro digital -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS para diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        digital: ['"VT323"', 'monospace'],
+                        futuristic: ['"Orbitron"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .lcd-screen {
+            background-color: #9ead86;
+            color: #111811;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .lcd-screen.light-on {
+            background-color: #22d3ee;
+            color: #02232b;
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
+        }
+        .casio-body {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #030712 100%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-amber-500 selection:text-black">
+
+    <!-- HEADER / MARCA -->
+    <header class="w-full max-w-4xl text-center py-6">
+        <h1 class="font-futuristic font-black text-3xl md:text-5xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 drop-shadow-lg">
+            DUCADO KONG
+        </h1>
+        <p class="font-mono text-sm md:text-base text-amber-400/80 tracking-widest mt-1">
+            CLUB MISTER KONG - MDP
+        </p>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="w-full max-w-4xl flex flex-col lg:flex-row gap-8 items-center justify-center my-auto">
+
+        <!-- RELOJ ESTILO CASIO -->
+        <div class="casio-body w-full max-w-xs rounded-3xl p-6 border-4 border-gray-800 flex flex-col items-center shadow-2xl relative">
+            <!-- Tornillos decorativos -->
+            <div class="absolute top-3 left-3 w-2 h-2 rounded-full bg-gray-600 shadow-inner"></div>
+            <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-gray-600 shadow-inner"></div>
+            
+            <div class="text-center mb-4">
+                <span class="text-xs font-bold tracking-widest text-amber-500 uppercase">CASIO</span>
+                <h2 class="text-sm font-semibold tracking-wider text-gray-300">WATER RESIST</h2>
+            </div>
+
+            <!-- Pantalla LCD -->
+            <div id="lcd" class="lcd-screen w-full rounded-lg p-3 flex flex-col items-center justify-center border-2 border-gray-700 relative overflow-hidden">
+                <!-- Leyenda Superior LCD -->
+                <div class="text-[10px] font-mono tracking-tighter text-center uppercase font-bold opacity-90 mb-1">
+                    CLUB MISTER KONG TE DA LA HORA
+                </div>
+
+                <!-- Día y Fecha -->
+                <div class="flex justify-between w-full px-2 text-xs font-mono font-bold opacity-80">
+                    <span id="date-day">LUN</span>
+                    <span id="date-num">02 NOV</span>
+                </div>
+
+                <!-- Hora Digital Grande -->
+                <div class="font-digital text-5xl md:text-6xl tracking-widest my-1 flex items-center">
+                    <span id="hours">12</span>:<span id="minutes">00</span><span class="text-2xl ml-1" id="seconds">00</span>
+                    <span class="text-xs ml-2 font-mono self-end mb-2" id="ampm">PM</span>
+                </div>
+            </div>
+
+            <!-- Botones del Reloj -->
+            <div class="flex justify-between w-full mt-6 px-2">
+                <button onclick="toggleLight()" class="bg-gray-800 hover:bg-gray-700 active:scale-95 text-xs text-amber-400 font-bold px-3 py-1.5 rounded border border-gray-700 shadow transition">
+                    LIGHT
+                </button>
+                <button onclick="updateClock()" class="bg-gray-800 hover:bg-gray-700 active:scale-95 text-xs text-gray-300 font-bold px-3 py-1.5 rounded border border-gray-700 shadow transition">
+                    MODE
+                </button>
+            </div>
+        </div>
+
+        <!-- VIDRIERA DE IMÁGENES Y SELLO -->
+        <div class="w-full flex-1 bg-gray-900/80 border border-gray-800 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
+            <h3 class="font-futuristic text-lg text-amber-400 border-b border-gray-800 pb-2">
+                Vidriera & Sellador Digital
+            </h3>
+
+            <!-- Selector de Imágenes o Subir -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs text-gray-400 font-medium">Elegí o subí tu imagen PNG:</label>
+                <input type="file" id="imageInput" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-gray-950 hover:file:bg-amber-400 cursor-pointer"/>
+            </div>
+
+            <!-- Vista previa y Canvas interactivo -->
+            <div class="relative w-full aspect-video bg-black/60 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center">
+                <canvas id="canvasPreview" class="max-h-full max-w-full object-contain"></canvas>
+                <div id="placeholderText" class="absolute text-xs text-gray-500 text-center px-4">
+                    Subí una imagen PNG para aplicar el sello automático de Ducado Kong con la hora exacta.
+                </div>
+            </div>
+
+            <!-- Botón de Descarga -->
+            <button id="downloadBtn" onclick="downloadImage()" disabled class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
+                Descargar Imagen Sellada
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full max-w-4xl text-center py-4 text-xs text-gray-600 font-mono">
+        Ducado Kong - Mr.Kong Club Mdp © 2026
+    </footer>
+
+    <!-- LÓGICA DE JAVASCRIPT -->
+    <script>
+        let lightState = false;
+        let uploadedImage = null;
