@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ducado Kong - Reloj Casio & Vidriera</title>
+    <title>Ducado Kong - Reloj Casio & Vidriera MDP</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -38,7 +38,6 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-amber-500 selection:text-black">
 
-    <!-- HEADER -->
     <header class="w-full max-w-5xl text-center py-6">
         <h1 class="font-futuristic font-black text-3xl md:text-5xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 drop-shadow-lg">
             DUCADO KONG
@@ -48,7 +47,6 @@
         </p>
     </header>
 
-    <!-- CONTENEDOR PRINCIPAL -->
     <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-start justify-center my-auto">
 
         <!-- RELOJ ESTILO CASIO -->
@@ -78,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- Botones -->
             <div class="flex justify-between w-full mt-6 px-2">
                 <button onclick="toggleLight()" class="bg-gray-800 hover:bg-gray-700 active:scale-95 text-xs text-amber-400 font-bold px-3 py-1.5 rounded border border-gray-700 shadow transition cursor-pointer">
                     LIGHT
@@ -89,55 +86,42 @@
             </div>
         </div>
 
-        <!-- VIDRIERA DE IMÁGENES DEL REPOSITORIO -->
+        <!-- VIDRIERA Y SELLADOR DIGITAL -->
         <div class="w-full flex-1 bg-gray-900/80 border border-gray-800 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
             <h3 class="font-futuristic text-lg text-amber-400 border-b border-gray-800 pb-2 flex justify-between items-center">
-                <span>Vidriera del Club</span>
-                <span class="text-xs font-mono text-gray-400">Imágenes del Repositorio</span>
+                <span>Vidriera & Sello Oficial</span>
+                <span class="text-xs font-mono text-gray-400">Mr.Kong Club Mdp</span>
             </h3>
 
-            <p class="text-xs text-gray-400">
-                Seleccioná una imagen de la vidriera para visualizarla, aplicarle el sello oficial con la hora exacta y descargarla:
-            </p>
-
-            <!-- Galería -->
-            <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2 border border-gray-800 rounded-lg bg-black/40">
-                <!-- Se cargan dinámicamente -->
+            <!-- Selector de Imagen -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs text-gray-300 font-medium">Cargar imagen PNG para la vidriera:</label>
+                <input type="file" id="fileInput" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-gray-950 hover:file:bg-amber-400 cursor-pointer bg-gray-950/60 rounded-lg border border-gray-800 p-1"/>
             </div>
 
-            <!-- Visor y Canvas -->
-            <div class="relative w-full aspect-video bg-black/60 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center">
+            <!-- Canvas de previsualización -->
+            <div class="relative w-full aspect-video bg-black/60 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center min-h-[220px]">
                 <canvas id="canvasPreview" class="max-h-full max-w-full object-contain hidden"></canvas>
-                <div id="placeholderText" class="absolute text-xs text-gray-500 text-center px-4">
-                    Elegí una imagen de arriba para verla en la vidriera con el sello de Ducado Kong.
+                <div id="placeholderText" class="text-xs text-gray-500 text-center px-4">
+                    Seleccioná tu imagen PNG para visualizarla con la hora exacta y el sello de Ducado Kong.
                 </div>
             </div>
 
             <!-- Botón de Descarga -->
-            <button id="downloadBtn" onclick="downloadImage()" disabled class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
-                Descargar Imagen con Sello y Hora Exacta
+            <button id="downloadBtn" onclick="downloadImage()" disabled class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-gray-950 font-bold py-3 px-4 rounded-xl transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
+                Descargar Imagen Con Sello y Hora Exacta
             </button>
         </div>
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="w-full max-w-5xl text-center py-4 text-xs text-gray-600 font-mono">
         Ducado Kong - Mr.Kong Club Mdp © 2026
     </footer>
 
-    <!-- LÓGICA -->
     <script>
-        // =========================================================================
-        // ⚠️ PONÉ ACÁ EXACTAMENTE LOS NOMBRES DE TUS ARCHIVOS PNG QUE SUBISTE A 'img/'
-        // =========================================================================
-        const repositoryImages = [
-            "imagen1.png",
-            "imagen2.png"
-        ];
-
         let lightState = false;
-        let selectedImgObj = null;
+        let loadedImg = null;
 
         // Reloj Casio
         function updateClock() {
@@ -176,72 +160,40 @@
             }
         }
 
-        // Cargar galería
-        const galleryGrid = document.getElementById('galleryGrid');
+        // Manejo del Canvas
+        const fileInput = document.getElementById('fileInput');
         const canvas = document.getElementById('canvasPreview');
         const ctx = canvas.getContext('2d');
         const placeholderText = document.getElementById('placeholderText');
         const downloadBtn = document.getElementById('downloadBtn');
 
-        function initGallery() {
-            if (repositoryImages.length === 0) {
-                galleryGrid.innerHTML = '<p class="text-xs text-gray-500 col-span-full text-center py-4">No hay imágenes configuradas en el código.</p>';
-                return;
-            }
-
-            repositoryImages.forEach((imgName) => {
-                // Usamos ruta absoluta basada en el repositorio para evitar problemas en GitHub Pages
-                const basePath = window.location.pathname.includes('/') && window.location.pathname.length > 1 
-                    ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) 
-                    : '';
-                const imgPath = `./img/${imgName}`;
-                
-                const thumbDiv = document.createElement('div');
-                thumbDiv.className = "relative aspect-square bg-black/80 rounded border border-gray-700 overflow-hidden cursor-pointer hover:border-amber-500 transition group flex flex-col items-center justify-center p-1";
-                
-                const imgTag = document.createElement('img');
-                imgTag.src = imgPath;
-                imgTag.alt = imgName;
-                imgTag.className = "w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded";
-                
-                // Control si falla la carga de la imagen
-                imgTag.onerror = function() {
-                    thumbDiv.innerHTML = `<span class="text-[9px] text-red-400 text-center font-mono">Error:<br>${imgName}</span>`;
-                };
-
-                thumbDiv.appendChild(imgTag);
-
-                // Al hacer clic, cargar al visor
-                thumbDiv.addEventListener('click', function() {
-                    document.querySelectorAll('#galleryGrid > div').forEach(d => d.classList.remove('ring-2', 'ring-amber-400'));
-                    thumbDiv.classList.add('ring-2', 'ring-amber-400');
-
-                    const fullImg = new Image();
-                    fullImg.onload = function() {
-                        selectedImgObj = fullImg;
-                        placeholderText.style.display = 'none';
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loadedImg = new Image();
+                    loadedImg.onload = function() {
+                        placeholderText.classList.add('hidden');
                         canvas.classList.remove('hidden');
-                        renderCanvasWithWatermark();
+                        renderCanvas();
                         downloadBtn.disabled = false;
-                    };
-                    fullImg.onerror = function() {
-                        alert("No se pudo cargar la imagen: " + imgPath + "\nVerificá que el archivo exista en la carpeta 'img' y el nombre sea exacto.");
                     }
-                    fullImg.src = imgPath;
-                });
+                    loadedImg.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
 
-                galleryGrid.appendChild(thumbDiv);
-            });
-        }
+        function renderCanvas() {
+            if (!loadedImg) return;
 
-        function renderCanvasWithWatermark() {
-            if (!selectedImgObj) return;
+            canvas.width = loadedImg.width;
+            canvas.height = loadedImg.height;
 
-            canvas.width = selectedImgObj.width;
-            canvas.height = selectedImgObj.height;
+            ctx.drawImage(loadedImg, 0, 0);
 
-            ctx.drawImage(selectedImgObj, 0, 0);
-
+            // Sello Ducado Kong - Mr.Kong Club Mdp + Hora Exacta
             const padding = Math.max(20, canvas.width * 0.03);
             const fontSize = Math.max(16, Math.floor(canvas.width * 0.025));
             
@@ -261,7 +213,7 @@
             const boxX = canvas.width - boxWidth - padding;
             const boxY = canvas.height - boxHeight - padding;
 
-            ctx.fillStyle = "rgba(10, 10, 10, 0.85)";
+            ctx.fillStyle = "rgba(10, 10, 10, 0.88)";
             ctx.strokeStyle = "#f59e0b";
             ctx.lineWidth = Math.max(2, canvas.width * 0.003);
             
@@ -279,16 +231,13 @@
         }
 
         function downloadImage() {
-            if (!selectedImgObj) return;
-            renderCanvasWithWatermark();
-            
+            if (!loadedImg) return;
+            renderCanvas();
             const link = document.createElement('a');
             link.download = 'ducado-kong-sellada.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
-
-        initGallery();
     </script>
 </body>
 </html>
